@@ -1,0 +1,17 @@
+-library clang
+-f
+-emptyStructsAsForwardDecls
+-mode Directory
+-package clojure.asm
+-o ../src/main/java
+-I/usr/include
+-I/usr/include/c++
+-I/usr/local/include
+-I/usr/local/lib/gcc/x86_64-apple-darwin14.0.0/4.9.1/include
+-I/usr/local/include/clang-c
+-runtime JNAerator
+-structsInLibrary
+-skipDeprecated
+-nocpp
+
+/usr/local/include/clang-c/*.h
