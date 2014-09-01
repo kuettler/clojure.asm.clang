@@ -40,8 +40,8 @@
            header-path)))
 
 (defn resolve-import-path
-  [^clojure.lang.Symbol import]
-  (resolve-header (str (str/replace (r/typename import) #"\." "/") ".h")))
+  [^String import]
+  (resolve-header (str (str/replace import #"\." "/") ".h")))
 
 (defn ^ClangLibrary$CXTranslationUnit translation-unit
   [^String path]
@@ -58,7 +58,7 @@
 (deftype ClangReflector []
   Reflector
   (do-reflect [_ typeref]
-    (let [header-path (resolve-import-path typeref)]
+    (let [header-path (resolve-import-path ^String typeref)]
       (visit-children ^ClangLibrary$CXTranslationUnit
                       (translation-unit header-path)))))
 
@@ -77,9 +77,10 @@
 
 (defn reflect
   [import]
-  (let [tu ^ClangLibrary$CXTranslationUnit
-        (translation-unit ^String (resolve-import-path import))]
-    (visit-children tu)))
+  (when-let [header ^String (and import (resolve-import-path (name import)))]
+    (let [tu ^ClangLibrary$CXTranslationUnit (translation-unit header)
+          ret (visit-children tu)]
+      ret)))
 
 (defn source-location-start
   [cursor]
@@ -171,15 +172,18 @@
 
 (defmethod -cursor-visitor CXCursor_MacroDefinition
   [cursor parent client-data]
-  (println (cursor-name cursor)))
+  ;; (println (cursor-name cursor))
+  )
 
 (defmethod -cursor-visitor CXCursor_MacroExpansion
   [cursor parent client-data]
-  (println (cursor-name cursor)))
+  ;; (println (cursor-name cursor))
+  )
 
 (defmethod -cursor-visitor CXCursor_MacroInstantiation
   [cursor parent client-data]
-  (println (cursor-name cursor)))
+  ;; (println (cursor-name cursor))
+  )
 
 (defmethod -cursor-visitor :default
   [cursor parent client-data]
@@ -214,3 +218,5 @@
                                         nil))]
     @obj
     (persistent! tset)))
+
+(dorun (reflect 'stdio))

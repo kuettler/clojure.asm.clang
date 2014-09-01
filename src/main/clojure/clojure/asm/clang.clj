@@ -66,4 +66,6 @@
 
   (defmethod print-method clojure.asm.ClangLibrary$CXTypeKind
     [x ^java.io.Writer writer]
-    (.write writer (pr-str (clang-get-type-kind-spelling x)))))
+    (.write writer (pr-str (clang-get-type-kind-spelling x))))
+  (clang-enable-stack-traces)
+  (clang-toggle-crash-recovery (int 1)))
