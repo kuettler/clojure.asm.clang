@@ -174,7 +174,7 @@
   (let [tset (transient #{})
         visitor (cursor-visitor tset)]
     (clang-visit-children (clang-get-translation-unit-cursor tu) visitor nil)
-    (.remove strong-references (hash visitor))
+    ;; (.remove strong-references (hash visitor))
     (persistent! tset)))
 
 (defn visit-fields
@@ -182,5 +182,5 @@
   (let [tset (transient #{})
         visitor (cursor-visitor tset :recursive? true)]
     (clang-visit-children (clang-get-type-declaration t) visitor nil)
-    (.remove strong-references (hash visitor))
+    ;; (.remove strong-references (hash visitor))
     (persistent! tset)))

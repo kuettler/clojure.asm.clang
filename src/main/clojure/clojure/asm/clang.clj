@@ -72,3 +72,4 @@
 (ns-unmap *ns* 'JNA_LIBRARY_NAME)
 (ns-unmap *ns* 'JNA_LIBRARY_PATH)
 (ns-unmap *ns* 'INSTANCE)
+(ns-unmap *ns* 'JNA_NATIVE_LIB)
