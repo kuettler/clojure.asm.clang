@@ -1,6 +1,5 @@
 (ns clojure.asm.reflector
   (:require [clojure.asm.clang :refer :all]
-            [clojure.reflect :as r :refer [Reflector TypeReference]]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.set :as set]
@@ -9,17 +8,10 @@
                         ClangLibrary$CXType$ByValue)
            (com.sun.jna Pointer)
            (com.sun.jna.ptr PointerByReference)
-           (java.nio IntBuffer)))
+           (java.nio IntBuffer)
+           (org.bridj BridJ)))
 
-(extend-protocol TypeReference
-  clojure.asm.ClangLibrary$CXCursor$ByValue
-  (typename [cursor]
-    (when-let [t (clang-get-cursor-type cursor)]
-      (r/typename t)))
-
-  clojure.asm.ClangLibrary$CXType$ByValue
-  (typename [type]
-    (clang-get-type-spelling type)))
+(def strong-references (java.util.HashMap.))
 
 (defn parse-flags
   [cursor]
@@ -55,25 +47,13 @@
 
 (declare visit-children)
 
-(deftype ClangReflector []
-  Reflector
-  (do-reflect [_ typeref]
-    (let [header-path (resolve-import-path ^String typeref)]
-      (visit-children ^ClangLibrary$CXTranslationUnit
-                      (translation-unit header-path)))))
-
-
-(dosync
-  (def clang-reflector (ClangReflector.))
-  (def cursor-kinds
-    (let [names (->> clojure.asm.ClangLibrary$CXCursorKind
-                     (clojure.reflect/reflect)
-                     (:members)
-                     (map :name))]
-      (zipmap (map keyword names)
-              (map (fn [name]
-                     (eval `(. clojure.asm.ClangLibrary$CXCursorKind ~name)))
-                   names)))))
+(def cursor-kinds
+  (let [names (->> clojure.asm.ClangLibrary$CXCursorKind
+                   (clojure.reflect/reflect)
+                   (:members)
+                   (map :name))]
+    (zipmap (map keyword names)
+            (map #(eval `(. clojure.asm.ClangLibrary$CXCursorKind ~%)) names))))
 
 (defn reflect
   [import]
@@ -170,53 +150,36 @@
             (cursor-name parent)
             (parse-flags cursor))))
 
-(defmethod -cursor-visitor CXCursor_MacroDefinition
-  [cursor parent client-data]
-  ;; (println (cursor-name cursor))
-  )
-
-(defmethod -cursor-visitor CXCursor_MacroExpansion
-  [cursor parent client-data]
-  ;; (println (cursor-name cursor))
-  )
-
-(defmethod -cursor-visitor CXCursor_MacroInstantiation
-  [cursor parent client-data]
-  ;; (println (cursor-name cursor))
-  )
-
 (defmethod -cursor-visitor :default
   [cursor parent client-data]
   nil)
 
 (defn cursor-visitor
   [tset & {:keys [recursive?]}]
-  (reify clojure.asm.ClangLibrary$CXCursorVisitor
-    (apply [this cursor parent client-data]
-      (try
-        (when-let [ret (-cursor-visitor cursor parent client-data)]
-          (conj! tset ret))
-        (if recursive?
-          CXChildVisit_Recurse
-          CXChildVisit_Continue)
-        (catch Throwable t
-          (println (.getMessage t)))))))
+  (let [visitor (reify clojure.asm.ClangLibrary$CXCursorVisitor
+                  (apply [this cursor parent client-data]
+                    (try
+                      (when-let [x (-cursor-visitor cursor parent client-data)]
+                        (conj! tset x))
+                      (if recursive?
+                        CXChildVisit_Recurse
+                        CXChildVisit_Continue)
+                      (catch Throwable t
+                        (println (.getMessage t))))))]
+    (.put strong-references (hash visitor) visitor)))
 
 (defn visit-children
   [^ClangLibrary$CXTranslationUnit tu]
   (let [tset (transient #{})
-        obj (atom (clang-visit-children (clang-get-translation-unit-cursor tu)
-                                        (cursor-visitor tset) nil))]
-    @obj
+        visitor (cursor-visitor tset)]
+    (clang-visit-children (clang-get-translation-unit-cursor tu) visitor nil)
+    (.remove (hash visitor))
     (persistent! tset)))
 
 (defn visit-fields
   [^ClangLibrary$CXType$ByValue t]
   (let [tset (transient #{})
-        obj (atom (clang-visit-children (clang-get-type-declaration t)
-                                        (cursor-visitor tset :recursive? true)
-                                        nil))]
-    @obj
+        visitor (cursor-visitor tset :recursive? true)]
+    (clang-visit-children (clang-get-type-declaration t) visitor nil)
+    (.remove (hash visitor))
     (persistent! tset)))
-
-(dorun (reflect 'stdio))

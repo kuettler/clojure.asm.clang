@@ -31,7 +31,6 @@
 (defn LLVMInitializeNativeTarget
   []
   (LLVMLinkInMCJIT)
-  (LLVMLinkInJIT)
   (LLVMLinkInInterpreter)
   (LLVMInitializeX86TargetInfo)
   (LLVMInitializeX86Target)
@@ -41,38 +40,37 @@
   (LLVMInitializeX86Disassembler)
   (LLVMEnablePrettyStackTrace))
 
-(dosync
-  (LLVMInitializeNativeTarget)
-  (def ^:dynamic *module* (LLVMModuleCreateWithName "user"))
-  (def ^:dynamic *builder* (LLVMCreateBuilder))
-  (def ^:dynamic *context* (LLVMGetGlobalContext))
-  (def ^:dynamic *engine*
-    (-> (doto (PointerByReference.)
-          (LLVMCreateExecutionEngineForModule *module* (into-array String [])))
-        (.getValue)
-        (clojure.asm.LLVMLibrary$LLVMExecutionEngineRef.)))
-  (def ^:dynamic *pass-manager* nil)
-  (def ^:dynamic *pass-registry*
-    (doto (LLVMGetGlobalPassRegistry)
-      (LLVMInitializeCore)
-      (LLVMInitializeTransformUtils)
-      (LLVMInitializeScalarOpts)
-      (LLVMInitializeVectorization)
-      (LLVMInitializeInstCombine)
-      (LLVMInitializeInstrumentation)
-      (LLVMInitializeIPO)
-      (LLVMInitializeAnalysis)
-      (LLVMInitializeIPA)
-      (LLVMInitializeCodeGen)
-      (LLVMInitializeTarget)))
-  (defmethod print-method clojure.asm.LLVMLibrary$LLVMModuleRef
-    [x writer]
-    (.write writer (LLVMPrintModuleToString x)))
+(LLVMInitializeNativeTarget)
+(def ^:dynamic *module* (LLVMModuleCreateWithName "user"))
+(def ^:dynamic *builder* (LLVMCreateBuilder))
+(def ^:dynamic *context* (LLVMGetGlobalContext))
+(def ^:dynamic *engine*
+  (-> (doto (PointerByReference.)
+        (LLVMCreateExecutionEngineForModule *module* (into-array String [])))
+      (.getValue)
+      (clojure.asm.LLVMLibrary$LLVMExecutionEngineRef.)))
+(def ^:dynamic *pass-manager* nil)
+(def ^:dynamic *pass-registry*
+  (doto (LLVMGetGlobalPassRegistry)
+    (LLVMInitializeCore)
+    (LLVMInitializeTransformUtils)
+    (LLVMInitializeScalarOpts)
+    (LLVMInitializeVectorization)
+    (LLVMInitializeInstCombine)
+    (LLVMInitializeInstrumentation)
+    (LLVMInitializeIPO)
+    (LLVMInitializeAnalysis)
+    (LLVMInitializeIPA)
+    (LLVMInitializeCodeGen)
+    (LLVMInitializeTarget)))
+(defmethod print-method clojure.asm.LLVMLibrary$LLVMModuleRef
+  [x writer]
+  (.write writer (LLVMPrintModuleToString x)))
 
-  (defmethod print-method clojure.asm.LLVMLibrary$LLVMValueRef
-    [x writer]
-    (.write writer (LLVMPrintValueToString x)))
+(defmethod print-method clojure.asm.LLVMLibrary$LLVMValueRef
+  [x writer]
+  (.write writer (LLVMPrintValueToString x)))
 
-  (defmethod print-method clojure.asm.LLVMLibrary$LLVMTypeRef
-    [x writer]
-    (.write writer (LLVMPrintTypeToString x))))
+(defmethod print-method clojure.asm.LLVMLibrary$LLVMTypeRef
+  [x writer]
+  (.write writer (LLVMPrintTypeToString x)))

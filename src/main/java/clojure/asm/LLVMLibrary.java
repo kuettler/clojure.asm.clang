@@ -24,7 +24,7 @@ import java.util.List;
  * For help, please visit <a href="http://nativelibs4java.googlecode.com/">NativeLibs4Java</a> , <a href="http://rococoa.dev.java.net/">Rococoa</a>, or <a href="http://jna.dev.java.net/">JNA</a>.
  */
 public interface LLVMLibrary extends Library {
-	public static final String JNA_LIBRARY_NAME = LibraryExtractor.getLibraryPath("LLVM", true, LLVMLibrary.class);
+	public static final String JNA_LIBRARY_NAME = LibraryExtractor.getLibraryPath("LLVM-3.6svn", true, LLVMLibrary.class);
 	public static final NativeLibrary JNA_NATIVE_LIB = NativeLibrary.getInstance(LLVMLibrary.JNA_LIBRARY_NAME, MangledFunctionMapper.DEFAULT_OPTIONS);
 	public static final LLVMLibrary INSTANCE = (LLVMLibrary)Native.loadLibrary(LLVMLibrary.JNA_LIBRARY_NAME, LLVMLibrary.class, MangledFunctionMapper.DEFAULT_OPTIONS);
 	public static interface LLVMAttribute {

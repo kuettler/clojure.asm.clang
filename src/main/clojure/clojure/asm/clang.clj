@@ -55,17 +55,17 @@
 (def ^:dynamic *line-separator* (System/getProperty "line.separator"))
 (def ^:dynamic *file-separator* (System/getProperty "file.separator"))
 
-(dosync
-  (defmethod print-method clojure.asm.ClangLibrary$CXString$ByValue
-    [x ^java.io.Writer writer]
-    (.write writer ^String (clang-get-cstring x)))
+(defmethod print-method clojure.asm.ClangLibrary$CXString$ByValue
+  [x ^java.io.Writer writer]
+  (.write writer ^String (clang-get-cstring x)))
 
-  (defmethod print-method clojure.asm.ClangLibrary$CXType$ByValue
-    [x ^java.io.Writer writer]
-    (.write writer (pr-str (clang-get-type-spelling x))))
+(defmethod print-method clojure.asm.ClangLibrary$CXType$ByValue
+  [x ^java.io.Writer writer]
+  (.write writer (pr-str (clang-get-type-spelling x))))
 
-  (defmethod print-method clojure.asm.ClangLibrary$CXTypeKind
-    [x ^java.io.Writer writer]
-    (.write writer (pr-str (clang-get-type-kind-spelling x))))
-  (clang-enable-stack-traces)
-  (clang-toggle-crash-recovery (int 1)))
+(defmethod print-method clojure.asm.ClangLibrary$CXTypeKind
+  [x ^java.io.Writer writer]
+  (.write writer (pr-str (clang-get-type-kind-spelling x))))
+
+(clang-enable-stack-traces)
+(clang-toggle-crash-recovery (int 1))

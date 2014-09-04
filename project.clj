@@ -8,6 +8,5 @@
                  [net.java.dev.jna/jna "4.1.0"]
                  [com.nativelibs4java/jnaerator "0.12-SNAPSHOT"]
                  [com.nativelibs4java/bridj "0.7-SNAPSHOT"]]
-  :jvm-opts ^:replace ["-Dclojure.compiler.disable-locals-clearing=true"]
   :source-paths ["src/main/clojure"]
   :java-source-paths ["src/main/java"])
