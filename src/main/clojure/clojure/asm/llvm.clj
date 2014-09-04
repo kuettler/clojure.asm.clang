@@ -79,3 +79,7 @@
 (defmethod print-method clojure.asm.LLVMLibrary$LLVMTypeRef
   [x writer]
   (.write writer (LLVMPrintTypeToString x)))
+
+(ns-unmap *ns* 'JNA_LIBRARY_NAME)
+(ns-unmap *ns* 'JNA_LIBRARY_PATH)
+(ns-unmap *ns* 'INSTANCE)
