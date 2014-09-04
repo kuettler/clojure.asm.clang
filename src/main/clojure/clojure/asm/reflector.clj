@@ -35,15 +35,28 @@
   [import]
   (resolve-header (str (str/replace import #"\." "/") ".h")))
 
-(defn ^ClangLibrary$CXTranslationUnit translation-unit
-  [^String path]
-  (let [idx ^Pointer (clang-create-index 0 0)
-        tu (PointerByReference.)
-        status (clang-parse-translation-unit2 idx path *args*
-                                              (count *args*) nil 0
-                                              CXTranslationUnit_None tu)]
-    (when (== status 0)
-      (clojure.asm.ClangLibrary$CXTranslationUnit. (.getValue tu)))))
+(defmacro with-translation-unit
+  [import & body]
+  `(do (clang-enable-stack-traces)
+       (clang-toggle-crash-recovery 1)
+       (let [idx# (clang-create-index 0 1)
+             tu# (PointerByReference.)
+             path# (resolve-import-path ~import)
+             status# (try
+                       (clang-parse-translation-unit2 idx# path# *args*
+                                                      (count *args*) nil 0
+                                                      CXTranslationUnit_None
+                                                      tu#)
+                       (catch Throwable t#
+                         (println (.getMessage t#))))
+             tu# (when-let [x# (and (== status# 0) (.getValue tu#))]
+                   (clojure.asm.ClangLibrary$CXTranslationUnit. x#))]
+         (when tu#
+           (binding [*translation-unit* tu#]
+             (let [ret# (do ~@body)]
+               (clang-dispose-index idx#)
+               (clang-dispose-translation-unit tu#)
+               ret#))))))
 
 (declare visit-children)
 
@@ -57,10 +70,8 @@
 
 (defn reflect
   [import]
-  (when-let [header ^String (and import (resolve-import-path (name import)))]
-    (let [tu ^ClangLibrary$CXTranslationUnit (translation-unit header)
-          ret (visit-children tu)]
-      ret)))
+  (with-translation-unit import
+    (visit-children *translation-unit*)))
 
 (defn source-location-start
   [cursor]
@@ -174,7 +185,6 @@
   (let [tset (transient #{})
         visitor (cursor-visitor tset)]
     (clang-visit-children (clang-get-translation-unit-cursor tu) visitor nil)
-    ;; (.remove strong-references (hash visitor))
     (persistent! tset)))
 
 (defn visit-fields
@@ -182,5 +192,4 @@
   (let [tset (transient #{})
         visitor (cursor-visitor tset :recursive? true)]
     (clang-visit-children (clang-get-type-declaration t) visitor nil)
-    ;; (.remove strong-references (hash visitor))
     (persistent! tset)))

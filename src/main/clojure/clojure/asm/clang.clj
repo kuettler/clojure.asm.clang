@@ -67,7 +67,6 @@
   (.write writer (pr-str (clang-get-type-kind-spelling x))))
 
 (clang-enable-stack-traces)
-(clang-toggle-crash-recovery (int 1))
 
 (ns-unmap *ns* 'JNA_LIBRARY_NAME)
 (ns-unmap *ns* 'JNA_LIBRARY_PATH)
