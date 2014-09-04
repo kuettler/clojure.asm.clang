@@ -103,14 +103,16 @@
 
 (defmethod -clang->llvm clang/CXType_Record
   [t]
-  (update-cache t (let [visitor (resolve 'clojure.asm.reflector/visit-fields)
-                        fields (visitor t)]
-                    (llvm/LLVMStructType
-                     (into-array clojure.asm.LLVMLibrary$LLVMTypeRef
-                                 (or (seq (map :type fields))
-                                     [(llvm/LLVMVoidType)]))
-                     (count fields)
-                     false))))
+  (update-cache
+   t
+   (let [visitor (resolve 'clojure.asm.reflector/visit-recursively)
+         fields (visitor t)]
+     (llvm/LLVMStructType
+      (into-array clojure.asm.LLVMLibrary$LLVMTypeRef
+                  (or (seq (map :type fields))
+                      [(llvm/LLVMVoidType)]))
+      (count fields)
+      false))))
 
 (defmethod -clang->llvm clang/CXType_FunctionProto
   [t]

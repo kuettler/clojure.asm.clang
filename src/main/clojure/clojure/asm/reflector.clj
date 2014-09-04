@@ -165,31 +165,40 @@
   [cursor parent client-data]
   nil)
 
-(defn cursor-visitor
-  [tset & {:keys [recursive?]}]
-  (let [visitor (reify clojure.asm.ClangLibrary$CXCursorVisitor
-                  (apply [this cursor parent client-data]
-                    (try
-                      (when-let [x (-cursor-visitor cursor parent client-data)]
-                        (conj! tset x))
-                      (if recursive?
-                        CXChildVisit_Recurse
-                        CXChildVisit_Continue)
-                      (catch Throwable t
-                        (println (.getMessage t))))))]
-    (.put strong-references (hash visitor) visitor)
-    visitor))
+(def ^:dynamic *visitor* nil)
+
+(defprotocol AsCursor
+  (cursor [_]))
+
+(extend-protocol AsCursor
+  ClangLibrary$CXTranslationUnit
+  (cursor [x]
+    (clang-get-translation-unit-cursor x))
+  ClangLibrary$CXType$ByValue
+  (cursor [x]
+    (clang-get-type-declaration x)))
+
+(defmacro with-visitor
+  [f & {:keys [recursive? target] :or {target *translation-unit*} :as options}]
+  `(let [tset# (transient #{})]
+     (binding [*visitor* (reify clojure.asm.ClangLibrary$CXCursorVisitor
+                           (apply [this# cursor# parent# client-data#]
+                             (try
+                               (when-let [x# (~f cursor# parent# client-data#)]
+                                 (conj! tset# x#))
+                               (if ~recursive?
+                                 CXChildVisit_Recurse
+                                 CXChildVisit_Continue)
+                               (catch Throwable t#
+                                 (println (.getMessage t#))))))]
+       (.put strong-references (hash *visitor*) *visitor*)
+       (clang-visit-children (cursor ~target) *visitor* nil)
+       (persistent! tset#))))
 
 (defn visit-children
-  [^ClangLibrary$CXTranslationUnit tu]
-  (let [tset (transient #{})
-        visitor (cursor-visitor tset)]
-    (clang-visit-children (clang-get-translation-unit-cursor tu) visitor nil)
-    (persistent! tset)))
+  [x]
+  (with-visitor -cursor-visitor :target x))
 
-(defn visit-fields
-  [^ClangLibrary$CXType$ByValue t]
-  (let [tset (transient #{})
-        visitor (cursor-visitor tset :recursive? true)]
-    (clang-visit-children (clang-get-type-declaration t) visitor nil)
-    (persistent! tset)))
+(defn visit-recursively
+  [x]
+  (with-visitor -cursor-visitor :recursive? true :target x))
