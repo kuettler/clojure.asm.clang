@@ -46,8 +46,7 @@
 (generate-wrapper-api clojure.asm.ClangLibrary$CXVisitorResult)
 (generate-wrapper-api clojure.asm.ClangLibrary$CXResult)
 
-(def ^:dynamic *include-paths* ["/usr/include" "/usr/local/include"
-                                "/usr/local/lib/clang/3.6.0/include"])
+(def ^:dynamic *include-paths* ["/usr/include" "/usr/local/include"])
 (def ^:dynamic *args* (into-array (map #(str "-I" %) *include-paths*)))
 (def ^:dynamic *index* nil)
 (def ^:dynamic *translation-unit* nil)

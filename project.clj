@@ -6,7 +6,6 @@
   :repositories {"sonatype" "https://oss.sonatype.org/content/groups/public/"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [net.java.dev.jna/jna "4.1.0"]
-                 [com.nativelibs4java/jnaerator "0.12-SNAPSHOT"]
-                 [com.nativelibs4java/bridj "0.7-SNAPSHOT"]]
+                 [com.nativelibs4java/jnaerator "0.12-SNAPSHOT"]]
   :source-paths ["src/main/clojure"]
   :java-source-paths ["src/main/java"])

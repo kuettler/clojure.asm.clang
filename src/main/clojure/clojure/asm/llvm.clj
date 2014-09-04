@@ -41,15 +41,19 @@
   (LLVMEnablePrettyStackTrace))
 
 (LLVMInitializeNativeTarget)
+
 (def ^:dynamic *module* (LLVMModuleCreateWithName "user"))
 (def ^:dynamic *builder* (LLVMCreateBuilder))
 (def ^:dynamic *context* (LLVMGetGlobalContext))
+
 (def ^:dynamic *engine*
   (-> (doto (PointerByReference.)
         (LLVMCreateExecutionEngineForModule *module* (into-array String [])))
       (.getValue)
       (clojure.asm.LLVMLibrary$LLVMExecutionEngineRef.)))
+
 (def ^:dynamic *pass-manager* nil)
+
 (def ^:dynamic *pass-registry*
   (doto (LLVMGetGlobalPassRegistry)
     (LLVMInitializeCore)
@@ -63,6 +67,7 @@
     (LLVMInitializeIPA)
     (LLVMInitializeCodeGen)
     (LLVMInitializeTarget)))
+
 (defmethod print-method clojure.asm.LLVMLibrary$LLVMModuleRef
   [x writer]
   (.write writer (LLVMPrintModuleToString x)))

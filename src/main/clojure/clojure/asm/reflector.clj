@@ -32,7 +32,7 @@
            header-path)))
 
 (defn resolve-import-path
-  [^String import]
+  [import]
   (resolve-header (str (str/replace import #"\." "/") ".h")))
 
 (defn ^ClangLibrary$CXTranslationUnit translation-unit
@@ -166,7 +166,8 @@
                         CXChildVisit_Continue)
                       (catch Throwable t
                         (println (.getMessage t))))))]
-    (.put strong-references (hash visitor) visitor)))
+    (.put strong-references (hash visitor) visitor)
+    visitor))
 
 (defn visit-children
   [^ClangLibrary$CXTranslationUnit tu]
