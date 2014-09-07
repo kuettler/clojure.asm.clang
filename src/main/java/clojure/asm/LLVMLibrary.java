@@ -696,8 +696,8 @@ public interface LLVMLibrary extends Library {
 	LLVMLibrary.LLVMValueRef LLVMConstShl(LLVMLibrary.LLVMValueRef LHSConstant, LLVMLibrary.LLVMValueRef RHSConstant);
 	LLVMLibrary.LLVMValueRef LLVMConstLShr(LLVMLibrary.LLVMValueRef LHSConstant, LLVMLibrary.LLVMValueRef RHSConstant);
 	LLVMLibrary.LLVMValueRef LLVMConstAShr(LLVMLibrary.LLVMValueRef LHSConstant, LLVMLibrary.LLVMValueRef RHSConstant);
-	LLVMLibrary.LLVMValueRef LLVMConstGEP(LLVMLibrary.LLVMValueRef ConstantVal, int ConstantIndices[], int NumIndices);
-	LLVMLibrary.LLVMValueRef LLVMConstInBoundsGEP(LLVMLibrary.LLVMValueRef ConstantVal, int ConstantIndices[], int NumIndices);
+	LLVMLibrary.LLVMValueRef LLVMConstGEP(LLVMLibrary.LLVMValueRef ConstantVal, LLVMLibrary.LLVMValueRef ConstantIndices[], int NumIndices);
+	LLVMLibrary.LLVMValueRef LLVMConstInBoundsGEP(LLVMLibrary.LLVMValueRef ConstantVal, LLVMLibrary.LLVMValueRef ConstantIndices[], int NumIndices);
 	LLVMLibrary.LLVMValueRef LLVMConstTrunc(LLVMLibrary.LLVMValueRef ConstantVal, LLVMLibrary.LLVMTypeRef ToType);
 	LLVMLibrary.LLVMValueRef LLVMConstSExt(LLVMLibrary.LLVMValueRef ConstantVal, LLVMLibrary.LLVMTypeRef ToType);
 	LLVMLibrary.LLVMValueRef LLVMConstZExt(LLVMLibrary.LLVMValueRef ConstantVal, LLVMLibrary.LLVMTypeRef ToType);
