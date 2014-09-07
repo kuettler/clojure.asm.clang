@@ -5,7 +5,8 @@
             [clojure.set :as set]
             [clojure.asm.type-mapper :refer [clang->llvm]])
   (:import (clojure.asm ClangLibrary$CXTranslationUnit
-                        ClangLibrary$CXType$ByValue)
+                        ClangLibrary$CXType$ByValue
+                        ClangLibrary$CXCursor)
            (com.sun.jna Pointer)
            (com.sun.jna.ptr PointerByReference)
            (java.nio IntBuffer)
@@ -41,12 +42,14 @@
        (clang-toggle-crash-recovery 1)
        (let [idx# (clang-create-index 0 1)
              tu# (PointerByReference.)
-             path# (resolve-import-path ~import)
              status# (try
-                       (clang-parse-translation-unit2 idx# path# *args*
-                                                      (count *args*) nil 0
-                                                      CXTranslationUnit_None
-                                                      tu#)
+                       (when-let [path# (resolve-import-path ~import)]
+                         (clang-parse-translation-unit2
+                          idx# path# *args*
+                          (count *args*) nil 0
+                          (bit-or CXTranslationUnit_DetailedPreprocessingRecord
+                                  CXTranslationUnit_PrecompiledPreamble)
+                          tu#))
                        (catch Throwable t#
                          (println (.getMessage t#))))
              tu# (when-let [x# (and (== status# 0) (.getValue tu#))]
@@ -58,7 +61,7 @@
                (clang-dispose-translation-unit tu#)
                ret#))))))
 
-(declare visit-children)
+(declare visit-children visit-recursively)
 
 (def cursor-kinds
   (let [names (->> clojure.asm.ClangLibrary$CXCursorKind
@@ -97,6 +100,7 @@
 (defrecord Function [name type return-type parameter-types flags])
 (defrecord Field [name type declaring-struct flags])
 (defrecord Variable [name type flags])
+(defrecord Macro [name type flags])
 
 (defn type? [x]
   (instance? Type x))
@@ -112,6 +116,9 @@
 
 (defn constructor? [x]
   (instance? Constructor x))
+
+(defn macro? [x]
+  (instance? Macro x))
 
 (defn cursor-name
   [cursor]
@@ -161,6 +168,18 @@
             (cursor-name parent)
             (parse-flags cursor))))
 
+(defmethod -cursor-visitor CXCursor_MacroDefinition
+  [cursor parent client-data]
+  (Macro. (cursor-name cursor) nil (parse-flags cursor)))
+
+(defmethod -cursor-visitor CXCursor_MacroExpansion
+  [cursor parent client-data]
+  (Macro. (cursor-name cursor) nil (parse-flags cursor)))
+
+(defmethod -cursor-visitor CXCursor_MacroInstantiation
+  [cursor parent client-data]
+  (Macro. (cursor-name cursor) nil (parse-flags cursor)))
+
 (defmethod -cursor-visitor :default
   [cursor parent client-data]
   nil)
@@ -176,23 +195,28 @@
     (clang-get-translation-unit-cursor x))
   ClangLibrary$CXType$ByValue
   (cursor [x]
-    (clang-get-type-declaration x)))
+    (clang-get-type-declaration x))
+  ClangLibrary$CXCursor
+  (cursor [x] x))
 
 (defmacro with-visitor
-  [f & {:keys [recursive? target] :or {target *translation-unit*} :as options}]
-  `(let [tset# (transient #{})]
+  [f & {:keys [recursive? target] :as options}]
+  `(let [tset# (transient #{})
+         f# ~f
+         target# ~(or target '*translation-unit*)
+         recursive# ~recursive?]
      (binding [*visitor* (reify clojure.asm.ClangLibrary$CXCursorVisitor
                            (apply [this# cursor# parent# client-data#]
                              (try
-                               (when-let [x# (~f cursor# parent# client-data#)]
+                               (when-let [x# (f# cursor# parent# client-data#)]
                                  (conj! tset# x#))
-                               (if ~recursive?
+                               (if recursive#
                                  CXChildVisit_Recurse
                                  CXChildVisit_Continue)
                                (catch Throwable t#
                                  (println (.getMessage t#))))))]
        (.put strong-references (hash *visitor*) *visitor*)
-       (clang-visit-children (cursor ~target) *visitor* nil)
+       (clang-visit-children (cursor target#) *visitor* nil)
        (persistent! tset#))))
 
 (defn visit-children

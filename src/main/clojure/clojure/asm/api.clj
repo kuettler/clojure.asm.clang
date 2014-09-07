@@ -123,28 +123,28 @@
                                                  parameter-types)
                                            :else parameter-types)))
                                  fn-methods)
-                       params (map (fn [parameter-types]
+                       args (map (fn [parameter-types]
                                      (mapv #(with-meta % {}) parameter-types))
                                    args)]]
              `(defn ~name'
                 ""
                 {:inline
-                 (fn ~@(map (fn [class name args params types]
+                 (fn ~@(map (fn [class name args types]
                               (cond
                                 static-object
-                                `(~params (list '. '~static-object '~name
+                                `(~args (list '. '~static-object '~name
                                                 ~@args))
                                 object-oriented?
-                                `(~params (list '. ~(first args) '~name
+                                `(~args (list '. ~(first args) '~name
                                               ~@(rest args)))
                                 :else `(~args (list '. ~class '~name ~@args))))
-                            (repeat class) (repeat name) args params types))
+                            (repeat class) (repeat name) args types))
                  :inline-arities ~inline-arities}
-                ~@(map (fn [class name args params types]
+                ~@(map (fn [class name args types]
                          (cond
                            static-object
-                           (list params (list* '. static-object name args))
+                           (list args (list* '. static-object name args))
                            object-oriented?
-                           (list params (list* '. (first args) name (rest args)))
+                           (list args (list* '. (first args) name (rest args)))
                            :else (list args (list* '. class name args))))
-                       (repeat class) (repeat name) args params types))))))
+                       (repeat class) (repeat name) args types))))))
