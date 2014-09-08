@@ -898,8 +898,8 @@ public interface LLVMLibrary extends Library {
 	LLVMLibrary.LLVMValueRef LLVMBuildFree(LLVMLibrary.LLVMBuilderRef LLVMBuilderRef1, LLVMLibrary.LLVMValueRef PointerVal);
 	LLVMLibrary.LLVMValueRef LLVMBuildLoad(LLVMLibrary.LLVMBuilderRef LLVMBuilderRef1, LLVMLibrary.LLVMValueRef PointerVal, String Name);
 	LLVMLibrary.LLVMValueRef LLVMBuildStore(LLVMLibrary.LLVMBuilderRef LLVMBuilderRef1, LLVMLibrary.LLVMValueRef Val, LLVMLibrary.LLVMValueRef Ptr);
-	LLVMLibrary.LLVMValueRef LLVMBuildGEP(LLVMLibrary.LLVMBuilderRef B, LLVMLibrary.LLVMValueRef Pointer, int Indices[], int NumIndices, String Name);
-	LLVMLibrary.LLVMValueRef LLVMBuildInBoundsGEP(LLVMLibrary.LLVMBuilderRef B, LLVMLibrary.LLVMValueRef Pointer, int Indices[], int NumIndices, String Name);
+	LLVMLibrary.LLVMValueRef LLVMBuildGEP(LLVMLibrary.LLVMBuilderRef B, LLVMLibrary.LLVMValueRef Pointer, LLVMLibrary.LLVMValueRef Indices[], int NumIndices, String Name);
+	LLVMLibrary.LLVMValueRef LLVMBuildInBoundsGEP(LLVMLibrary.LLVMBuilderRef B, LLVMLibrary.LLVMValueRef Pointer, LLVMLibrary.LLVMValueRef Indices[], int NumIndices, String Name);
 	LLVMLibrary.LLVMValueRef LLVMBuildStructGEP(LLVMLibrary.LLVMBuilderRef B, LLVMLibrary.LLVMValueRef Pointer, int Idx, String Name);
 	LLVMLibrary.LLVMValueRef LLVMBuildGlobalString(LLVMLibrary.LLVMBuilderRef B, String Str, String Name);
 	LLVMLibrary.LLVMValueRef LLVMBuildGlobalStringPtr(LLVMLibrary.LLVMBuilderRef B, String Str, String Name);
