@@ -7,6 +7,8 @@ YourKit is kindly supporting clojure.asm.clang with its full-featured Java Profi
 * <a href="http://www.yourkit.com/java/profiler/index.jsp">YourKit Java Profiler</a> and
 * <a href="http://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>.
 
+![](doc/yklogo.png)
+
 ## License
 
 Copyright © 2014 Adrian Medina
